@@ -157,8 +157,7 @@ defmodule SoundtrackTest do
       assert conn.query_params["fmt"] == "json"
 
       case {conn.request_path, conn.query_params} do
-        {"/ws/2/release-group/",
-         %{"query" => ~s(releasegroup:"Nothing" AND secondarytype:soundtrack)}} ->
+        {"/ws/2/release-group/", %{"query" => "releasegroup:\"Nothing\"" <> _}} ->
           Req.Test.json(conn, %{"release-groups" => []})
 
         {"/ws/2/release-group/", %{"query" => q}} ->

@@ -1,24 +1,24 @@
-# Soundtrack
+# MusicBrainz
 
-The music of a film or a show, from [MusicBrainz](https://musicbrainz.org):
-the soundtrack albums named after the title, and their tracks. No key, no
+A [MusicBrainz](https://musicbrainz.org) client for the music of films and
+shows: the soundtrack albums named after a title, and their tracks. No key, no
 playback — each track can become a YouTube search link.
 
 ```elixir
 def deps do
-  [{:soundtrack, "~> 0.1"}]
+  [{:musicbrainz, "~> 0.1"}]
 end
 ```
 
 ```elixir
-{:ok, albums} = Soundtrack.albums("Heat", year: 1995)
+{:ok, albums} = MusicBrainz.albums("Heat", year: 1995)
 #=> [%{id: "…", title: "Heat (Music From the Motion Picture)", year: 1995, artist: "Various Artists"},
 #    %{id: "…", title: "Heat: The Score", year: 1996, artist: "Elliot Goldenthal"}]
 
-{:ok, tracks} = Soundtrack.tracks(hd(albums).id)
+{:ok, tracks} = MusicBrainz.tracks(hd(albums).id)
 #=> [%{n: 1, title: "Heat", artist: "Elliot Goldenthal feat. Kronos Quartet", secs: 461}, …]
 
-Soundtrack.youtube(["Elliot Goldenthal", "Heat", "Heat"])
+MusicBrainz.youtube(["Elliot Goldenthal", "Heat", "Heat"])
 #=> "https://www.youtube.com/results?search_query=Elliot+Goldenthal+Heat"
 ```
 
@@ -43,7 +43,7 @@ MusicBrainz is free and asks two things: a user agent that names your
 application with a way to reach you, and no more than one request a second.
 
 ```elixir
-config :soundtrack, user_agent: "MyApp/1.0 (https://example.com)"
+config :musicbrainz, user_agent: "MyApp/1.0 (https://example.com)"
 ```
 
 Keep the second yourself: cache the answers (albums for a month, tracks for
@@ -54,7 +54,7 @@ a year — they do not change). A `503` comes back as `{:error, :rate_limited}`.
 Every request merges `req_options`, so point it at `Req.Test`:
 
 ```elixir
-config :soundtrack, req_options: [plug: {Req.Test, Soundtrack}]
+config :musicbrainz, req_options: [plug: {Req.Test, MusicBrainz}]
 ```
 
 ## License

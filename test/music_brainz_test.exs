@@ -1,23 +1,23 @@
-defmodule SoundtrackTest do
+defmodule MusicBrainzTest do
   use ExUnit.Case, async: false
 
   setup do
-    Application.put_env(:soundtrack, :req_options, plug: {Req.Test, Soundtrack})
-    on_exit(fn -> Application.delete_env(:soundtrack, :req_options) end)
+    Application.put_env(:musicbrainz, :req_options, plug: {Req.Test, MusicBrainz})
+    on_exit(fn -> Application.delete_env(:musicbrainz, :req_options) end)
     :ok
   end
 
   test "a film is searched within a year of its release, a show by name alone" do
-    assert Soundtrack.query("Heat", year: 1995) ==
-             ~s(releasegroup:"Heat" AND secondarytype:soundtrack AND firstreleasedate:[1994 TO 1996])
+    assert MusicBrainz.query("Heat", year: 1995) ==
+             ~s(releasegroup:"Heat" AND secondarytype:musicbrainz AND firstreleasedate:[1994 TO 1996])
 
-    assert Soundtrack.query("Heat", year: "1995") =~ "[1994 TO 1996]"
+    assert MusicBrainz.query("Heat", year: "1995") =~ "[1994 TO 1996]"
 
-    assert Soundtrack.query("Game of Thrones") ==
-             ~s(releasegroup:"Game of Thrones" AND secondarytype:soundtrack)
+    assert MusicBrainz.query("Game of Thrones") ==
+             ~s(releasegroup:"Game of Thrones" AND secondarytype:musicbrainz)
 
     # Quotes in a name are escaped, not ended.
-    assert Soundtrack.query(~s(The "Movie")) =~ ~s(releasegroup:"The \\"Movie\\"")
+    assert MusicBrainz.query(~s(The "Movie")) =~ ~s(releasegroup:"The \\"Movie\\"")
   end
 
   test "the albums kept are the ones named after the title, oldest first, a handful at most" do
@@ -48,7 +48,7 @@ defmodule SoundtrackTest do
           do: %{"id" => "x#{n}", "title" => "Heat #{n}", "score" => 60, "primary-type" => "Album"}
         )
 
-    albums = Soundtrack.pick_albums(groups, "Heat")
+    albums = MusicBrainz.pick_albums(groups, "Heat")
     assert Enum.map(albums, & &1.id) == ["a", "d", "x1", "x2", "x3", "x4", "x5", "x6"]
 
     assert hd(albums) == %{
@@ -58,8 +58,8 @@ defmodule SoundtrackTest do
              artist: "Various Artists"
            }
 
-    assert length(Soundtrack.pick_albums(groups, "Heat", 2)) == 2
-    assert Soundtrack.pick_albums(nil, "Heat") == []
+    assert length(MusicBrainz.pick_albums(groups, "Heat", 2)) == 2
+    assert MusicBrainz.pick_albums(nil, "Heat") == []
   end
 
   test "the tracks are the fullest release's, numbered through its discs, with the artist and length" do
@@ -94,13 +94,13 @@ defmodule SoundtrackTest do
       }
     ]
 
-    assert Soundtrack.parse_tracks(releases) == [
+    assert MusicBrainz.parse_tracks(releases) == [
              %{n: 1, title: "Heat", artist: "Elliot Goldenthal feat. Kronos Quartet", secs: 461},
              %{n: 2, title: "Condensers", artist: "Elliot Goldenthal", secs: 155}
            ]
 
-    assert [%{n: 1}] = Soundtrack.parse_tracks(releases, 1)
-    assert Soundtrack.parse_tracks([]) == []
+    assert [%{n: 1}] = MusicBrainz.parse_tracks(releases, 1)
+    assert MusicBrainz.parse_tracks([]) == []
   end
 
   test "an artist credited in kana is named by the Latin sort name, first name first" do
@@ -136,22 +136,22 @@ defmodule SoundtrackTest do
     ]
 
     assert [%{artist: "The Seatbelts"}, %{artist: "Yoko Kanno & シートベルツ"}] =
-             Soundtrack.parse_tracks(releases)
+             MusicBrainz.parse_tracks(releases)
   end
 
   test "a YouTube search carries the words that are there, each once" do
-    assert Soundtrack.youtube(["Hans Zimmer", nil, "Dust", "", "Interstellar"]) ==
+    assert MusicBrainz.youtube(["Hans Zimmer", nil, "Dust", "", "Interstellar"]) ==
              "https://www.youtube.com/results?search_query=Hans+Zimmer+Dust+Interstellar"
 
-    assert Soundtrack.youtube(["Kronos Quartet", "Heat", "Heat"]) ==
+    assert MusicBrainz.youtube(["Kronos Quartet", "Heat", "Heat"]) ==
              "https://www.youtube.com/results?search_query=Kronos+Quartet+Heat"
   end
 
   test "albums/2 asks MusicBrainz with the user agent, tries the other names, and tracks/2 reads a group" do
-    Application.put_env(:soundtrack, :user_agent, "test/1 (x)")
-    on_exit(fn -> Application.delete_env(:soundtrack, :user_agent) end)
+    Application.put_env(:musicbrainz, :user_agent, "test/1 (x)")
+    on_exit(fn -> Application.delete_env(:musicbrainz, :user_agent) end)
 
-    Req.Test.stub(Soundtrack, fn conn ->
+    Req.Test.stub(MusicBrainz, fn conn ->
       conn = Plug.Conn.fetch_query_params(conn)
       assert Plug.Conn.get_req_header(conn, "user-agent") == ["test/1 (x)"]
       assert conn.query_params["fmt"] == "json"
@@ -180,14 +180,14 @@ defmodule SoundtrackTest do
     end)
 
     assert {:ok, [%{id: "g1", title: "Heat"}]} =
-             Soundtrack.albums("Nothing", names: ["Heat"], year: 1995)
+             MusicBrainz.albums("Nothing", names: ["Heat"], year: 1995)
 
-    assert {:ok, [%{n: 1, title: "Heat", secs: 2}]} = Soundtrack.tracks("g1")
+    assert {:ok, [%{n: 1, title: "Heat", secs: 2}]} = MusicBrainz.tracks("g1")
   end
 
   test "errors are values" do
-    Req.Test.stub(Soundtrack, fn conn -> Plug.Conn.send_resp(conn, 503, "") end)
-    assert Soundtrack.albums("Heat") == {:error, :rate_limited}
-    assert Soundtrack.tracks("g1") == {:error, :rate_limited}
+    Req.Test.stub(MusicBrainz, fn conn -> Plug.Conn.send_resp(conn, 503, "") end)
+    assert MusicBrainz.albums("Heat") == {:error, :rate_limited}
+    assert MusicBrainz.tracks("g1") == {:error, :rate_limited}
   end
 end

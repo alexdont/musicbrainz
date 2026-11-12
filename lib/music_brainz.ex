@@ -1,16 +1,16 @@
-defmodule Soundtrack do
+defmodule MusicBrainz do
   @moduledoc """
   The music of a film or a show, from [MusicBrainz](https://musicbrainz.org):
   the soundtrack albums named after the title, and their tracks.
 
-      {:ok, albums} = Soundtrack.albums("Heat", year: 1995)
+      {:ok, albums} = MusicBrainz.albums("Heat", year: 1995)
       #=> [%{id: "…", title: "Heat (Music From the Motion Picture)", year: 1995,
       #      artist: "Various Artists"}, %{title: "Heat: The Score", …}]
 
-      {:ok, tracks} = Soundtrack.tracks(hd(albums).id)
+      {:ok, tracks} = MusicBrainz.tracks(hd(albums).id)
       #=> [%{n: 1, title: "Heat", artist: "Elliot Goldenthal feat. Kronos Quartet", secs: 461}, …]
 
-      Soundtrack.youtube([hd(tracks).artist, hd(tracks).title, "Heat"])
+      MusicBrainz.youtube([hd(tracks).artist, hd(tracks).title, "Heat"])
       #=> "https://www.youtube.com/results?search_query=Elliot+Goldenthal+feat.+Kronos+Quartet+Heat"
 
   MusicBrainz is asked for *release groups* of secondary type **soundtrack**
@@ -28,18 +28,18 @@ defmodule Soundtrack do
   names your application** with a way to reach you, and **one request a
   second**. Set the first:
 
-      config :soundtrack, user_agent: "MyApp/1.0 (https://example.com)"
+      config :musicbrainz, user_agent: "MyApp/1.0 (https://example.com)"
 
   and keep the second yourself: cache what comes back (albums for a month,
   tracks for a year — they do not change) and do not ask in a loop. Nothing
   here plays music and no YouTube key is needed: `youtube/1` is a search link.
 
-  Every request merges `:req_options` (per call or `config :soundtrack,
+  Every request merges `:req_options` (per call or `config :musicbrainz,
   :req_options`), so the client can be pointed at `Req.Test`.
   """
 
   @base_url "https://musicbrainz.org/ws/2"
-  @default_agent "soundtrack-elixir/0.1 (https://hex.pm/packages/soundtrack)"
+  @default_agent "musicbrainz-elixir/0.1 (https://hex.pm/packages/musicbrainz)"
 
   @typedoc "A release group: `year` is its first release's, `artist` the credit as printed."
   @type album :: %{
@@ -104,7 +104,7 @@ defmodule Soundtrack do
   """
   @spec query(String.t(), keyword()) :: String.t()
   def query(name, opts \\ []) do
-    base = ~s(releasegroup:"#{escape(name)}" AND secondarytype:soundtrack)
+    base = ~s(releasegroup:"#{escape(name)}" AND secondarytype:musicbrainz)
 
     case Keyword.get(opts, :year) do
       y when is_integer(y) -> base <> " AND firstreleasedate:[#{y - 1} TO #{y + 1}]"
@@ -285,8 +285,8 @@ defmodule Soundtrack do
     end
   end
 
-  defp user_agent, do: Application.get_env(:soundtrack, :user_agent, @default_agent)
+  defp user_agent, do: Application.get_env(:musicbrainz, :user_agent, @default_agent)
 
   defp req_options(opts),
-    do: Keyword.get(opts, :req_options) || Application.get_env(:soundtrack, :req_options, [])
+    do: Keyword.get(opts, :req_options) || Application.get_env(:musicbrainz, :req_options, [])
 end

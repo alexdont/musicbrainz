@@ -1,13 +1,13 @@
-defmodule Soundtrack.MixProject do
+defmodule MusicBrainz.MixProject do
   use Mix.Project
 
   @version "0.1.0"
-  @description "The soundtrack albums of a film or show from MusicBrainz, with their tracks: release groups of type soundtrack named after the title, within a year of a film's release, artists in Latin letters — and a YouTube search link per track. No key, no playback."
-  @source_url "https://github.com/alexdont/soundtrack"
+  @description "A MusicBrainz client for the music of films and shows: the soundtrack albums named after a title (a film's within a year of its release), their tracks with artists in Latin letters, and a YouTube search link per track. No key, no playback."
+  @source_url "https://github.com/alexdont/musicbrainz"
 
   def project do
     [
-      app: :soundtrack,
+      app: :musicbrainz,
       version: @version,
       description: @description,
       elixir: "~> 1.15",
@@ -32,7 +32,7 @@ defmodule Soundtrack.MixProject do
 
   defp package do
     [
-      name: "soundtrack",
+      name: "musicbrainz",
       maintainers: ["Alexander Don"],
       licenses: ["MIT"],
       links: %{
@@ -45,10 +45,10 @@ defmodule Soundtrack.MixProject do
 
   defp docs do
     [
-      name: "Soundtrack",
+      name: "MusicBrainz",
       source_ref: "v#{@version}",
       source_url: @source_url,
-      main: "Soundtrack",
+      main: "MusicBrainz",
       extras: ["README.md", "CHANGELOG.md", "LICENSE"]
     ]
   end
